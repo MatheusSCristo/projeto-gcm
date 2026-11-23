@@ -1,0 +1,53 @@
+import type { Produto } from "./produto.js";
+import { ProdutoRepositoryMemoria, type ProdutoRepository } from "./produto-repository.js";
+
+export interface EstoqueProduto {
+  codigo: number;
+  estoque: number;
+}
+
+export interface ItemVendido {
+  codigo: number;
+  quantidade: number;
+  subtotal: number;
+  estoque: number;
+}
+
+export interface ResultadoVenda {
+  total: number;
+  itens: ItemVendido[];
+}
+
+/**
+ * Camada de serviço: concentra todas as regras de negócio da loja.
+ * Não depende da API REST nem do front-end e pode ser usada diretamente (ex.: testes unitários).
+ * Os parâmetros são `unknown` porque toda validação de presença e de tipo acontece aqui.
+ */
+export class LojaService {
+  constructor(private readonly repositorio: ProdutoRepository = new ProdutoRepositoryMemoria()) {}
+
+  /** Cria um produto com o código e o preço informados e estoque zero. */
+  cadastrarProduto(codigo: unknown, preco: unknown): Produto {
+    throw new Error("Operação não implementada: cadastrarProduto");
+  }
+
+  /** Retorna a quantidade em estoque do produto. */
+  consultarEstoque(codigo: unknown): EstoqueProduto {
+    throw new Error("Operação não implementada: consultarEstoque");
+  }
+
+  /** Acrescenta a quantidade informada ao estoque do produto (reposição). */
+  entradaEstoque(codigo: unknown, quantidade: unknown): EstoqueProduto {
+    throw new Error("Operação não implementada: entradaEstoque");
+  }
+
+  /** Subtrai a quantidade informada do estoque do produto (perda, avaria ou ajuste). */
+  saidaEstoque(codigo: unknown, quantidade: unknown): EstoqueProduto {
+    throw new Error("Operação não implementada: saidaEstoque");
+  }
+
+  /** Dá baixa no estoque de cada item e calcula o total. Atômica: se um item falhar, nada muda. */
+  realizarVenda(itens: unknown): ResultadoVenda {
+    throw new Error("Operação não implementada: realizarVenda");
+  }
+}

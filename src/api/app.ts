@@ -8,6 +8,9 @@ export function criarApp(service: LojaService = new LojaService()): Express {
 
   app.use(express.json());
   app.use("/loja", criarRotas(service));
+  app.use((_req, res) => {
+    res.status(404).json({ erro: "Rota não encontrada" });
+  });
   app.use(tratadorErros);
 
   return app;

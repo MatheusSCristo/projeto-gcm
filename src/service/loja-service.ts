@@ -1,6 +1,6 @@
 import type { Produto } from "./produto.js";
 import { ProdutoRepositoryMemoria, type ProdutoRepository } from "./produto-repository.js";
-import { ProdutoNaoEncontradoError } from "./erros.js";
+import { DadosInvalidosError, ProdutoNaoEncontradoError } from "./erros.js";
 import { exigirInteiroPositivo } from "./validacao.js";
 
 export interface EstoqueProduto {
@@ -65,6 +65,62 @@ export class LojaService {
 
   /** Dá baixa no estoque de cada item e calcula o total. Atômica: se um item falhar, nada muda. */
   realizarVenda(itens: unknown): ResultadoVenda {
-    throw new Error("Operação não implementada: realizarVenda");
+    if (!Array.isArray(itens) || itens.length === 0) {
+      throw new DadosInvalidosError("O campo 'itens' deve ser uma lista não vazia");
+    }
+
+    // Toda a validação acontece antes de alterar qualquer estoque, para a venda ser atômica.
+    // 1. Formato de cada item (400)
+    const pedidos = itens.map((item, i) => {
+      if (typeof item !== "object" || item === null) {
+        throw new DadosInvalidosError(`O item ${i + 1} da venda é inválido`);
+      }
+      const { codigo, quantidade } = item as Record<string, unknown>;
+      return {
+        codigo: exigirInteiroPositivo(codigo, `itens[${i}].codigo`),
+        quantidade: exigirInteiroPositivo(quantidade, `itens[${i}].quantidade`),
+      };
+    });
+
+    // 2. Existência de todos os produtos (404)
+    const produtos = pedidos.map(({ codigo }) => {
+      const produto = this.repositorio.buscar(codigo);
+      if (!produto) {
+        throw new ProdutoNaoEncontradoError(codigo);
+      }
+      return produto;
+    });
+
+    // 3. Estoque suficiente, somando itens repetidos do mesmo produto (400)
+    const quantidadePorCodigo = new Map<number, number>();
+    for (const { codigo, quantidade } of pedidos) {
+      quantidadePorCodigo.set(codigo, (quantidadePorCodigo.get(codigo) ?? 0) + quantidade);
+    }
+    for (const [codigo, quantidade] of quantidadePorCodigo) {
+      const disponivel = this.repositorio.buscar(codigo)!.estoque;
+      if (quantidade > disponivel) {
+        throw new DadosInvalidosError(
+          `Estoque insuficiente para o produto ${codigo}: disponível ${disponivel}, solicitado ${quantidade}`,
+        );
+      }
+    }
+
+    // 4. Baixa no estoque e cálculo dos valores (em centavos, para evitar erro de ponto flutuante)
+    let totalCentavos = 0;
+    const vendidos = pedidos.map(({ codigo, quantidade }, i) => {
+      const produto = produtos[i];
+      produto.estoque -= quantidade;
+      this.repositorio.salvar(produto);
+
+      const subtotalCentavos = emCentavos(produto.preco) * quantidade;
+      totalCentavos += subtotalCentavos;
+      return { codigo, quantidade, subtotal: subtotalCentavos / 100, estoque: produto.estoque };
+    });
+
+    return { total: totalCentavos / 100, itens: vendidos };
   }
+}
+
+function emCentavos(valor: number): number {
+  return Math.round(valor * 100);
 }

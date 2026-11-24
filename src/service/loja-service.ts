@@ -1,6 +1,6 @@
 import type { Produto } from "./produto.js";
 import { ProdutoRepositoryMemoria, type ProdutoRepository } from "./produto-repository.js";
-import { ProdutoJaExisteError, ProdutoNaoEncontradoError } from "./erros.js";
+import { DadosInvalidosError, ProdutoJaExisteError, ProdutoNaoEncontradoError } from "./erros.js";
 import { exigirInteiroPositivo, exigirNumeroPositivo } from "./validacao.js";
 
 export interface EstoqueProduto {

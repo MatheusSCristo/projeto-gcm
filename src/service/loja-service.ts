@@ -1,5 +1,7 @@
 import type { Produto } from "./produto.js";
 import { ProdutoRepositoryMemoria, type ProdutoRepository } from "./produto-repository.js";
+import { ProdutoNaoEncontradoError } from "./erros.js";
+import { exigirInteiroPositivo } from "./validacao.js";
 
 export interface EstoqueProduto {
   codigo: number;
@@ -33,7 +35,13 @@ export class LojaService {
 
   /** Retorna a quantidade em estoque do produto. */
   consultarEstoque(codigo: unknown): EstoqueProduto {
-    throw new Error("Operação não implementada: consultarEstoque");
+    const cod = exigirInteiroPositivo(codigo, "codigo");
+    const produto = this.repositorio.buscar(cod);
+    if (!produto) {
+      throw new ProdutoNaoEncontradoError(cod);
+    }
+
+    return { codigo: produto.codigo, estoque: produto.estoque };
   }
 
   /** Acrescenta a quantidade informada ao estoque do produto (reposição). */

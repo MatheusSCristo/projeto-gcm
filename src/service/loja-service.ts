@@ -1,6 +1,6 @@
 import type { Produto } from "./produto.js";
 import { ProdutoRepositoryMemoria, type ProdutoRepository } from "./produto-repository.js";
-import { ProdutoNaoEncontradoError } from "./erros.js";
+import { DadosInvalidosError, ProdutoNaoEncontradoError } from "./erros.js";
 import { exigirInteiroPositivo } from "./validacao.js";
 
 export interface EstoqueProduto {
@@ -60,7 +60,21 @@ export class LojaService {
 
   /** Subtrai a quantidade informada do estoque do produto (perda, avaria ou ajuste). */
   saidaEstoque(codigo: unknown, quantidade: unknown): EstoqueProduto {
-    throw new Error("Operação não implementada: saidaEstoque");
+    const cod = exigirInteiroPositivo(codigo, "codigo");
+    const qtd = exigirInteiroPositivo(quantidade, "quantidade");
+    const produto = this.repositorio.buscar(cod);
+    if (!produto) {
+      throw new ProdutoNaoEncontradoError(cod);
+    }
+    if (qtd > produto.estoque) {
+      throw new DadosInvalidosError(
+        `Estoque insuficiente para o produto ${cod}: disponível ${produto.estoque}, solicitado ${qtd}`,
+      );
+    }
+
+    produto.estoque -= qtd;
+    this.repositorio.salvar(produto);
+    return { codigo: produto.codigo, estoque: produto.estoque };
   }
 
   /** Dá baixa no estoque de cada item e calcula o total. Atômica: se um item falhar, nada muda. */

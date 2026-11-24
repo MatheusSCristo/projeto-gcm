@@ -1,7 +1,7 @@
 import type { Produto } from "./produto.js";
 import { ProdutoRepositoryMemoria, type ProdutoRepository } from "./produto-repository.js";
-import { DadosInvalidosError, ProdutoNaoEncontradoError } from "./erros.js";
-import { exigirInteiroPositivo } from "./validacao.js";
+import { ProdutoJaExisteError, ProdutoNaoEncontradoError } from "./erros.js";
+import { exigirInteiroPositivo, exigirNumeroPositivo } from "./validacao.js";
 
 export interface EstoqueProduto {
   codigo: number;
@@ -30,7 +30,15 @@ export class LojaService {
 
   /** Cria um produto com o código e o preço informados e estoque zero. */
   cadastrarProduto(codigo: unknown, preco: unknown): Produto {
-    throw new Error("Operação não implementada: cadastrarProduto");
+    const cod = exigirInteiroPositivo(codigo, "codigo");
+    const valor = exigirNumeroPositivo(preco, "preco");
+    if (this.repositorio.buscar(cod)) {
+      throw new ProdutoJaExisteError(cod);
+    }
+
+    const produto: Produto = { codigo: cod, preco: valor, estoque: 0 };
+    this.repositorio.salvar(produto);
+    return { ...produto };
   }
 
   /** Retorna a quantidade em estoque do produto. */

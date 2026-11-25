@@ -47,6 +47,7 @@ no pull request. Nenhuma branch é removida.
 
 | Tag | Branch | Descrição |
 |---|---|---|
+| `rc-1.2` | `release/v1` | Saída e venda permitem estoque negativo (#19) |
 | `rc-1.1` | `release/v1` | Versão 1 com as 5 operações, pronta para testes (não para produção) |
 
 ### Estabilização da versão 1

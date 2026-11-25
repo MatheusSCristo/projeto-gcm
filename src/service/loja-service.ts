@@ -66,7 +66,10 @@ export class LojaService {
     return { codigo: produto.codigo, estoque: produto.estoque };
   }
 
-  /** Subtrai a quantidade informada do estoque do produto (perda, avaria ou ajuste). */
+  /**
+   * Subtrai a quantidade informada do estoque do produto (perda, avaria ou ajuste).
+   * A saída maior que o estoque é permitida e deixa o estoque negativo.
+   */
   saidaEstoque(codigo: unknown, quantidade: unknown): EstoqueProduto {
     const cod = exigirInteiroPositivo(codigo, "codigo");
     const qtd = exigirInteiroPositivo(quantidade, "quantidade");
@@ -74,18 +77,16 @@ export class LojaService {
     if (!produto) {
       throw new ProdutoNaoEncontradoError(cod);
     }
-    if (qtd > produto.estoque) {
-      throw new DadosInvalidosError(
-        `Estoque insuficiente para o produto ${cod}: disponível ${produto.estoque}, solicitado ${qtd}`,
-      );
-    }
 
     produto.estoque -= qtd;
     this.repositorio.salvar(produto);
     return { codigo: produto.codigo, estoque: produto.estoque };
   }
 
-  /** Dá baixa no estoque de cada item e calcula o total. Atômica: se um item falhar, nada muda. */
+  /**
+   * Dá baixa no estoque de cada item e calcula o total. Atômica: se um item for inválido
+   * (campo inválido ou produto inexistente), nada muda. Assim como na saída, o estoque pode ficar negativo.
+   */
   realizarVenda(itens: unknown): ResultadoVenda {
     if (!Array.isArray(itens) || itens.length === 0) {
       throw new DadosInvalidosError("O campo 'itens' deve ser uma lista não vazia");
@@ -113,21 +114,7 @@ export class LojaService {
       return produto;
     });
 
-    // 3. Estoque suficiente, somando itens repetidos do mesmo produto (400)
-    const quantidadePorCodigo = new Map<number, number>();
-    for (const { codigo, quantidade } of pedidos) {
-      quantidadePorCodigo.set(codigo, (quantidadePorCodigo.get(codigo) ?? 0) + quantidade);
-    }
-    for (const [codigo, quantidade] of quantidadePorCodigo) {
-      const disponivel = this.repositorio.buscar(codigo)!.estoque;
-      if (quantidade > disponivel) {
-        throw new DadosInvalidosError(
-          `Estoque insuficiente para o produto ${codigo}: disponível ${disponivel}, solicitado ${quantidade}`,
-        );
-      }
-    }
-
-    // 4. Baixa no estoque e cálculo dos valores (em centavos, para evitar erro de ponto flutuante)
+    // 3. Baixa no estoque e cálculo dos valores (em centavos, para evitar erro de ponto flutuante)
     let totalCentavos = 0;
     const vendidos = pedidos.map(({ codigo, quantidade }, i) => {
       const produto = produtos[i];

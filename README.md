@@ -37,8 +37,7 @@ src/
 | `main` | Versões em produção |
 | `develop` | Integração das funcionalidades da próxima versão |
 | `feature/<issue>-<descricao>` | Uma funcionalidade ou mudança; sai de `develop` e volta para `develop` |
-| `release/v1` | Estabilização da versão 1; recebe apenas correções |
-| `bugfix/<issue>-<descricao>` | Correção de defeito encontrado na estabilização; sai de `release/v1` e volta para `release/v1` |
+| `release/v1` | Estabilização da versão 1; sai de `develop`, recebe apenas correções, número de versão e notas, e volta para `main` e `develop` |
 | `hotfix/<issue>-<descricao>` | Correção urgente em produção; sai de `main` e volta para `main` e `develop` |
 
 Toda branch auxiliar está associada a uma issue, cujo número aparece no nome da branch, nos commits e
@@ -53,7 +52,7 @@ no pull request. Nenhuma branch é removida.
 ### Estabilização da versão 1
 
 1. Cada defeito encontrado nos testes é registrado como issue com a label `bug`.
-2. A correção é feita em `bugfix/<issue>-<descricao>`, criada a partir de `release/v1`, e integrada por pull request em `release/v1`.
+2. A correção é feita diretamente na `release/v1`, em commits que citam o número da issue.
 3. Ao fim de cada rodada de correções, uma nova baseline é criada em `release/v1`: `rc-1.2`, `rc-1.3`, …
 4. As correções da `release/v1` são integradas de volta em `develop`.
 5. Quando a versão estiver estável, `release/v1` é integrada em `main` com a tag `v1.0` e de volta em `develop`.

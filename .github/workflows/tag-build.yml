@@ -1,0 +1,30 @@
+name: Tag
+
+on:
+  pull_request:
+    types: [closed]
+    branches:
+      - develop
+
+permissions:
+  contents: write
+
+jobs:
+  tag:
+    if: github.event.pull_request.merged == true && startsWith(github.event.pull_request.head.ref, 'feature/')
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout do commit de merge
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.merge_commit_sha }}
+
+      - name: Cria e publica a tag
+        env:
+          BRANCH: ${{ github.event.pull_request.head.ref }}
+          COMMIT: ${{ github.event.pull_request.merge_commit_sha }}
+        run: |
+          TAG="build-${BRANCH#feature/}"
+          git tag -f "$TAG" "$COMMIT"
+          git push -f origin "refs/tags/$TAG"
+          echo "Tag $TAG criada no commit $COMMIT"

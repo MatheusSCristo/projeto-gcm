@@ -1,0 +1,35 @@
+name: Validação de PR
+
+# Roda na abertura de um pull request para a develop e a cada novo commit nele.
+# No evento pull_request, o checkout padrão usa refs/pull/<n>/merge: o resultado do merge
+# da branch de origem com a develop, antes de o merge ser realizado.
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+    branches:
+      - develop
+
+permissions:
+  contents: read
+
+jobs:
+  validacao:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout do resultado do merge com a develop
+        uses: actions/checkout@v4
+
+      - name: Configura o Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Instala as dependências
+        run: npm ci
+
+      - name: Checa os tipos
+        run: npm run typecheck
+
+      - name: Executa os testes unitários
+        run: npm test

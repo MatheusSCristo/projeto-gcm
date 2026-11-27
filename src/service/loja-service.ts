@@ -36,7 +36,7 @@ export class LojaService {
       throw new ProdutoJaExisteError(cod);
     }
 
-    const produto: Produto = { codigo: cod, preco: valor, estoque: 1 };
+    const produto: Produto = { codigo: cod, preco: valor, estoque: 0 };
     this.repositorio.salvar(produto);
     return { ...produto };
   }

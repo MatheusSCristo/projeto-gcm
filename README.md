@@ -58,6 +58,26 @@ no pull request. Nenhuma branch é removida.
 4. As correções da `release/v1` são integradas de volta em `develop`.
 5. Quando a versão estiver estável, `release/v1` é integrada em `main` com a tag `v1.0` e de volta em `develop`.
 
+## Integração contínua
+
+Os testes unitários ficam em `tests/` e chamam a camada de serviço diretamente:
+
+```bash
+npm test            # executa os testes unitários (Vitest)
+npm run typecheck   # checa os tipos sem gerar arquivos
+```
+
+Três workflows do GitHub Actions automatizam a validação do código:
+
+| Workflow | Arquivo | Quando roda | O que faz |
+|---|---|---|---|
+| Build | `build.yml` | Push em `feature/**` | Instala as dependências e checa os tipos |
+| Validação de PR | `validacao-pr.yml` | Abertura e atualização de PR para `develop` | Sobre o resultado do merge com a `develop`, instala as dependências, checa os tipos e executa os testes |
+| Tag | `tag-build.yml` | Merge de PR de `feature/*` na `develop` | Cria ou atualiza a tag `build-<branch sem feature/>` no commit de merge |
+
+A `develop` é protegida por um ruleset: só recebe mudanças por pull request, com merge commit, e o
+merge fica bloqueado enquanto o check `validacao` não passar.
+
 ## Equipe
 
 - Matheus Cristo
